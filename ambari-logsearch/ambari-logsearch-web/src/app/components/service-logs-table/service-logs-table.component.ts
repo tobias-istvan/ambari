@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import {Component, AfterViewInit, AfterViewChecked, ViewChild, ElementRef, Input, ChangeDetectorRef} from '@angular/core';
+import {Component, AfterViewChecked, ViewChild, ElementRef, Input, ChangeDetectorRef} from '@angular/core';
 
 import {ListItem} from '@app/classes/list-item';
 import {LogsTableComponent} from '@app/classes/components/logs-table/logs-table-component';

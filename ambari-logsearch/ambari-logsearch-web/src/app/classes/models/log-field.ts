@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
-export class LogField {
-  constructor(name: string) {
-    this.name = name;
-  }
+/**
+ * This is an interface for the service and audit log fields.
+ */
+export interface LogField {
+  group?: string; // eg.: HDFS, Ambari, etc this prop is only used in Audit logs
+  label: string;
   name: string;
-  displayName: string = this.name;
-  isDisplayed: boolean = false;
-  isAvailable: boolean = true;
+  isFilterable: boolean; // it can be used in a filter query
+  isVisible: boolean; // visible by default in the log list
 }

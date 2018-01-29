@@ -16,13 +16,10 @@
  * limitations under the License.
  */
 
-export interface ListItem {
-  id?: string;
-  group?: string;
-  label?: string;
-  value: any;
-  iconClass?: string;
-  isChecked?: boolean;
-  isFilterable?: boolean;
-  action?: string;
+import {ComponentItemGroup} from "@app/classes/models/component-item-group";
+
+export interface ComponentItem {
+  name: string,
+  label: string,
+  group?: ComponentItemGroup,
 }

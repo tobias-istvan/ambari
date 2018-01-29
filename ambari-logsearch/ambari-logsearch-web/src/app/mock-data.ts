@@ -169,7 +169,15 @@ export const mockData = {
               }
             ]
           },
-          components: {},
+          components: {
+            metadata: [{
+              name: 'ambari',
+              label: 'Ambari'
+            }, {
+              name: 'hdfs',
+              label: 'HDFS'
+            }]
+          },
           resources: {
             6: {
               graphData: [

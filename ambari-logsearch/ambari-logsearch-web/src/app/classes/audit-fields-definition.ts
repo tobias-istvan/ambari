@@ -15,14 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {LogField} from "@app/classes/models/log-field";
 
-export interface ListItem {
-  id?: string;
+export interface AuditFieldsDefinition {
   group?: string;
-  label?: string;
-  value: any;
-  iconClass?: string;
-  isChecked?: boolean;
-  isFilterable?: boolean;
-  action?: string;
+  fields: LogField[];
 }

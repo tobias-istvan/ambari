@@ -16,13 +16,7 @@
  * limitations under the License.
  */
 
-export interface ListItem {
-  id?: string;
-  group?: string;
-  label?: string;
-  value: any;
-  iconClass?: string;
-  isChecked?: boolean;
-  isFilterable?: boolean;
-  action?: string;
-}
+export const environment = {
+  production: true,
+  apiUrl: 'http://c6401.ambari.apache.org:61888/api/v1/'
+};

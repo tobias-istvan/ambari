@@ -99,6 +99,9 @@ import {ContextMenuComponent} from '@app/components/context-menu/context-menu.co
 
 import {TimeZoneAbbrPipe} from '@app/pipes/timezone-abbr.pipe';
 import {TimerSecondsPipe} from '@app/pipes/timer-seconds.pipe';
+import {ServiceComponentsNameService} from "@app/services/storage/service-components-name.service";
+import {AuditComponentsNameService} from "@app/services/storage/audit-components-name.service";
+import {ComponentNamePipe} from "@app/pipes/component-name";
 
 export function HttpLoaderFactory(http: Http): TranslateHttpLoader {
   // adding 'static' parameter to step over mock data request
@@ -160,7 +163,8 @@ export function getXHRBackend(injector: Injector, browser: BrowserXhr, xsrf: XSR
     TimeLineGraphComponent,
     ContextMenuComponent,
     TimeZoneAbbrPipe,
-    TimerSecondsPipe
+    TimerSecondsPipe,
+    ComponentNamePipe
   ],
   imports: [
     BrowserModule,
@@ -208,7 +212,9 @@ export function getXHRBackend(injector: Injector, browser: BrowserXhr, xsrf: XSR
       useFactory: getXHRBackend,
       deps: [Injector, BrowserXhr, XSRFStrategy, ResponseOptions]
     },
-    AuthService
+    AuthService,
+    ServiceComponentsNameService,
+    AuditComponentsNameService
   ],
   bootstrap: [AppComponent],
   entryComponents: [NodeBarComponent],

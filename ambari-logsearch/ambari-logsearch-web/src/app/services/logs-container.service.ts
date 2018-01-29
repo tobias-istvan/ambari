@@ -26,6 +26,7 @@ import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/first';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/takeUntil';
+import { forkJoin } from "rxjs/observable/forkJoin";
 import * as moment from 'moment-timezone';
 import {HttpClientService} from '@app/services/http-client.service';
 import {AuditLogsService} from '@app/services/storage/audit-logs.service';
@@ -50,13 +51,15 @@ import {HomogeneousObject} from '@app/classes/object';
 import {LogsType, ScrollType, SortingType} from '@app/classes/string';
 import {Tab} from '@app/classes/models/tab';
 import {LogField} from '@app/classes/models/log-field';
+import {AuditFieldsDefinition} from "@app/classes/audit-fields-definition";
 import {AuditLog} from '@app/classes/models/audit-log';
-import {AuditLogField} from '@app/classes/models/audit-log-field';
 import {ServiceLog} from '@app/classes/models/service-log';
-import {ServiceLogField} from '@app/classes/models/service-log-field';
 import {BarGraph} from '@app/classes/models/bar-graph';
 import {NodeItem} from '@app/classes/models/node-item';
 import {CommonEntry} from '@app/classes/models/common-entry';
+import {ComponentItem} from "@app/classes/models/component-item";
+import {ServiceComponentsNameService} from "@app/services/storage/service-components-name.service";
+import {AuditComponentsNameService} from "@app/services/storage/audit-components-name.service";
 
 @Injectable()
 export class LogsContainerService {
@@ -67,8 +70,8 @@ export class LogsContainerService {
     private auditLogsGraphStorage: AuditLogsGraphDataService, private auditLogsFieldsStorage: AuditLogsFieldsService,
     private serviceLogsStorage: ServiceLogsService, private serviceLogsFieldsStorage: ServiceLogsFieldsService,
     private serviceLogsHistogramStorage: ServiceLogsHistogramDataService, private clustersStorage: ClustersService,
-    private serviceLogsTruncatedStorage: ServiceLogsTruncatedService, private appSettings: AppSettingsService
-
+    private serviceLogsTruncatedStorage: ServiceLogsTruncatedService, private appSettings: AppSettingsService,
+    private serviceComponentsNameStorage: ServiceComponentsNameService, private auditComponentsNameStorage: AuditComponentsNameService
   ) {
     const formItems = Object.keys(this.filters).reduce((currentObject: any, key: string): HomogeneousObject<FormControl> => {
       let formControl = new FormControl(),
@@ -571,14 +574,25 @@ export class LogsContainerService {
 
   private filtersFormChange: Subject<void> = new Subject();
 
-  private columnsMapper<FieldT extends LogField>(fields: FieldT[]): ListItem[] {
-    return fields.filter((field: FieldT): boolean => field.isAvailable).map((field: FieldT): ListItem => {
+  private columnsMapper(fields: LogField[]): ListItem[] {
+    return fields.map((field: LogField): ListItem => {
       return {
         value: field.name,
-        label: field.displayName || field.name,
-        isChecked: field.isDisplayed
+        label: field.label || field.name,
+        isFilterable: field.isFilterable,
+        isChecked: field.isVisible || true
       };
     });
+  }
+
+  auditColumnsMapper(definitions: AuditFieldsDefinition[]): LogField[] {
+    return definitions.find((def => !def.group)).fields;
+    /*return definitions.map(definition => {
+      return Object.assign({},{
+        group: definition.group,
+        fields: this.columnsMapper(definition.fields)
+      })
+    });*/
   }
 
   private logsMapper<LogT extends AuditLog & ServiceLog>(result: [LogT[], ListItem[]]): LogT[] {
@@ -595,7 +609,7 @@ export class LogsContainerService {
     }
   }
 
-  auditLogsColumns: Observable<ListItem[]> = this.auditLogsFieldsStorage.getAll().map(this.columnsMapper);
+  auditLogsColumns: Observable<ListItem[]> = this.auditLogsFieldsStorage.getAll().map(this.auditColumnsMapper).map(this.columnsMapper);
 
   serviceLogsColumns: Observable<ListItem[]> = this.serviceLogsFieldsStorage.getAll().map(this.columnsMapper);
 
@@ -622,7 +636,7 @@ export class LogsContainerService {
    */
   private getListItemFromNode(node: NodeItem): ListItem {
     return {
-      label: `${node.name} (${node.value})`,
+      label: `${node.label || node.name} (${node.value})`,
       value: node.name
     };
   }
@@ -791,13 +805,21 @@ export class LogsContainerService {
     this.httpClient.get('serviceLogsFields').subscribe((response: Response): void => {
       const jsonResponse = response.json();
       if (jsonResponse) {
-        this.serviceLogsFieldsStorage.addInstances(this.getColumnsArray(jsonResponse, ServiceLogField));
+        this.serviceLogsFieldsStorage.addInstances(jsonResponse);
       }
     });
     this.httpClient.get('auditLogsFields').subscribe((response: Response): void => {
       const jsonResponse = response.json();
       if (jsonResponse) {
-        this.auditLogsFieldsStorage.addInstances(this.getColumnsArray(jsonResponse, AuditLogField));
+        const groups = Object.keys(jsonResponse.overrides);
+        let definitions:AuditFieldsDefinition[] = [{
+          fields: jsonResponse.defaults
+        }];
+        definitions.push(...groups.map(group => Object.assign({}, {
+          group,
+          fields: jsonResponse.overrides[group]
+        })));
+        this.auditLogsFieldsStorage.addInstances(definitions);
       }
     });
   }
@@ -960,21 +982,55 @@ export class LogsContainerService {
     return request;
   }
 
-  loadComponents(): Observable<Response> {
-    const request = this.httpClient.get('components');
+  loadComponentsNamesByType(type: string): Observable<Response> {
+    const request = this.httpClient.get(type + 'ComponentsName');
     request.subscribe((response: Response): void => {
-      const jsonResponse = response.json(),
-        components = jsonResponse && jsonResponse.vNodeList.map((item): NodeItem => Object.assign(item, {
-            value: item.logLevelCount.reduce((currentValue: number, currentItem): number => {
-              return currentValue + Number(currentItem.value);
-            }, 0)
-          }));
+      let components: ComponentItem[];
+      const jsonResponse = response.json();
+      const groups = jsonResponse && jsonResponse.groups;
+      components = jsonResponse && jsonResponse.metadata && jsonResponse.metadata.map((item): ComponentItem => {
+        return {
+          name: item.name,
+          label: item.label,
+          group: item.group ? {
+            name: item.group,
+            label: groups[item.group]
+          } : null
+        };
+      });
+      if (components) {
+        this[type + 'ComponentsNameStorage'].addInstances(components);
+      }
+    });
+    return request;
+  }
+
+  loadComponents(): Observable<Response[]> {
+    const requestComponentsLevelCount = this.httpClient.get('components');
+    const requestComponentsName = this.httpClient.get('serviceComponentsName');
+    const requests = forkJoin([requestComponentsName, requestComponentsLevelCount]);
+    requests.subscribe(results => {
+      const componentsNameResponse = results[0].json();
+      const componentsLevelCountResponse = results[1].json();
+      let components = componentsLevelCountResponse.vNodeList.map(
+        (item): NodeItem => {
+          const component = componentsNameResponse.metadata.find(component => component.name === item.name);
+          return Object.assign(item, {
+            label: component ? component.label : item.name,
+            group: component && component.group,
+            groupLabel: component && componentsNameResponse.groups[component.group],
+            value: item.logLevelCount.reduce(
+              (currentValue: number, currentItem): number => {
+                return currentValue + Number(currentItem.value);
+              }, 0)
+          })
+        });
       if (components) {
         this.filters.components.options.push(...components.map(this.getListItemFromNode));
         this.componentsStorage.addInstances(components);
       }
     });
-    return request;
+    return requests;
   }
 
   loadHosts(): Observable<Response> {

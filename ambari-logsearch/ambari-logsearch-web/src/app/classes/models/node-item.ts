@@ -20,6 +20,9 @@ import {CommonEntry} from '@app/classes/models/common-entry';
 
 export interface NodeItem {
   name: string;
+  label?: string;
+  group?: string;
+  groupLabel?: string;
   type?: string;
   value: string;
   isParent: boolean;

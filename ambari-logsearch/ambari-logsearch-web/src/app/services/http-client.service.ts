@@ -70,6 +70,12 @@ export class HttpClientService extends Http {
       url: 'service/logs/truncated',
       params: opts => new ServiceLogsTruncatedQueryParams(opts)
     },
+    auditComponentsName: {
+      url: 'audit/logs/components'
+    },
+    serviceComponentsName: {
+      url: 'service/logs/components'
+    },
     components: {
       url: 'service/logs/components/levels/counts'
     },

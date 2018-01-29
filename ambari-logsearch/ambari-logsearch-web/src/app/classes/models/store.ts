@@ -27,8 +27,7 @@ import {Graph} from '@app/classes/models/graph';
 import {NodeItem} from '@app/classes/models/node-item';
 import {UserConfig} from '@app/classes/models/user-config';
 import {Filter} from '@app/classes/models/filter';
-import {AuditLogField} from '@app/classes/models/audit-log-field';
-import {ServiceLogField} from '@app/classes/models/service-log-field';
+import {LogField} from '@app/classes/models/log-field';
 import {Tab} from '@app/classes/models/tab';
 
 export const storeActions = {
@@ -56,8 +55,8 @@ export interface AppStore {
   filters: Filter[];
   clusters: string[];
   components: NodeItem[];
-  serviceLogsFields: ServiceLogField[];
-  auditLogsFields: AuditLogField[];
+  serviceLogsFields: LogField[];
+  auditLogsFields: LogField[];
   tabs: Tab[];
 }
 
