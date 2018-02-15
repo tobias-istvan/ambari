@@ -672,9 +672,14 @@ def init_ldap_properties_list_reqd(properties, options):
   ]
   return ldap_properties
 
-def update_ldap_configuration(properties, ldap_property_value_map):
-  admin_login = get_validated_string_input("Enter Ambari Admin login: ", None, None, None, False, False)
-  admin_password = get_validated_string_input("Enter Ambari Admin password: ", None, None, None, True, False)
+def get_ambari_admin_username_password_pair(options):
+  admin_login = options.ambari_admin_username if options.ambari_admin_username is not None else get_validated_string_input("Enter Ambari Admin login: ", None, None, None, False, False)
+  admin_password = options.ambari_admin_password if options.ambari_admin_password is not None else get_validated_string_input("Enter Ambari Admin password: ", None, None, None, True, False)
+
+  return admin_login, admin_password
+
+def update_ldap_configuration(options, properties, ldap_property_value_map):
+  admin_login, admin_password = get_ambari_admin_username_password_pair(options)
   url = get_ambari_server_api_base(properties) + SETUP_LDAP_CONFIG_URL
   admin_auth = base64.encodestring('%s:%s' % (admin_login, admin_password)).replace('\n', '')
   request = urllib2.Request(url)
@@ -692,14 +697,13 @@ def update_ldap_configuration(properties, ldap_property_value_map):
   request.get_method = lambda: 'PUT'
 
   try:
-    response = urllib2.urlopen(request)
+    with closing(urllib2.urlopen(request)) as response:
+      response_status_code = response.getcode()
+      if response_status_code != 200:
+        err = 'Error during setup-ldap. Http status code - ' + str(response_status_code)
+        raise FatalException(1, err)
   except Exception as e:
     err = 'Updating LDAP configuration failed. Error details: %s' % e
-    raise FatalException(1, err)
-
-  response_status_code = response.getcode()
-  if response_status_code != 200:
-    err = 'Error during setup-ldap. Http status code - ' + str(response_status_code)
     raise FatalException(1, err)
 
 def setup_ldap(options):
@@ -722,6 +726,14 @@ def setup_ldap(options):
       raise FatalException(1, err)
 
   isSecure = get_is_secure(properties)
+
+  if options.ldap_url:
+    options.ldap_primary_host = options.ldap_url.split(':')[0]
+    options.ldap_primary_port = options.ldap_url.split(':')[1]
+
+  if options.ldap_secondary_url:
+    options.ldap_secondary_host = options.ldap_secondary_url.split(':')[0]
+    options.ldap_secondary_port = options.ldap_secondary_url.split(':')[1]
 
   ldap_property_list_reqd = init_ldap_properties_list_reqd(properties, options)
 
@@ -809,8 +821,8 @@ def setup_ldap(options):
   print 'Review Settings'
   print '=' * 20
   for property in ldap_property_list_reqd:
-    if ldap_property_value_map.has_key(property):
-      print("%s: %s" % (property, ldap_property_value_map[property]))
+    if ldap_property_value_map.has_key(property.prop_name):
+      print("%s %s" % (property.ldap_prop_val_prompt, ldap_property_value_map[property.prop_name]))
 
   for property in ldap_property_list_opt:
     if ldap_property_value_map.has_key(property):
@@ -843,7 +855,7 @@ def setup_ldap(options):
 
     ldap_property_value_map[IS_LDAP_CONFIGURED] = "true"
     #Saving LDAP configuration in Ambari DB using the REST API
-    update_ldap_configuration(properties, ldap_property_value_map)
+    update_ldap_configuration(options, properties, ldap_property_value_map)
 
     #The only property we want to write out in Ambari.properties is the client.security type being LDAP
     ldap_property_value_map.clear()
