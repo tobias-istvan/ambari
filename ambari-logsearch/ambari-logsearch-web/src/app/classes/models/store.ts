@@ -30,7 +30,7 @@ import {UserConfig} from '@app/classes/models/user-config';
 import {Tab} from '@app/classes/models/tab';
 import {LogField} from '@app/classes/object';
 import {UtilsService} from '@app/services/utils.service';
-import {NotificationInterface} from '@modules/shared/interfaces/notification.interface';
+import {NotificationInterface} from '@modules/shared/models/notification.interface';
 import {LogsState} from '@app/classes/models/logs-state';
 
 const storeActions = {

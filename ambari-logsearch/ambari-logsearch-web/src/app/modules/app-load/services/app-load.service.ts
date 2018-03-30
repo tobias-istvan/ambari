@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { Injectable } from '@angular/core';
+import {EventEmitter, Injectable} from '@angular/core';
 import {Response} from '@angular/http';
 import 'rxjs/add/operator/toPromise';
 import {TranslateService} from '@ngx-translate/core';
@@ -36,13 +36,15 @@ import {DataAvailabilityValues} from 'app/classes/string';
 @Injectable()
 export class AppLoadService {
 
+  private translationLoaded: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   constructor(
     private httpClient: HttpClientService,
     private appStateService: AppStateService,
     private clustersStorage: ClustersService,
     private serviceLogsFieldsService: ServiceLogsFieldsService,
     private auditLogsFieldsService: AuditLogsFieldsService,
-    private translationService: TranslateService,
+    private translateService: TranslateService,
     private hostStoreService: HostsService,
     private componentsStorageService: ComponentsService
   ) {
@@ -166,8 +168,10 @@ export class AppLoadService {
   }
 
   syncAuthorizedStateWithBackend(): Promise<any> {
-    const statusRequest: Promise<Response> = this.httpClient.get('status').toPromise();
-    statusRequest.then(
+    const statusRequest: Observable<Response> = this.translationLoaded.first().switchMap((): Observable<Response> => {
+      return this.httpClient.get('status');
+    });
+    return statusRequest.toPromise().then(
       () => this.appStateService.setParameters({
         isAuthorized: true,
         isInitialLoading: false
@@ -177,12 +181,13 @@ export class AppLoadService {
         isInitialLoading: false
       })
     );
-    return statusRequest;
   }
 
-  setTranslationService() {
-    this.translationService.setDefaultLang('en');
-    return this.translationService.use('en').toPromise();
+  setTranslateService() {
+    this.translateService.setDefaultLang('en');
+    const translationLoader$ = this.translateService.use('en');
+    translationLoader$.first().subscribe(() => this.translationLoaded.emit(true), () => this.translationLoaded.emit(false));
+    return translationLoader$.toPromise();
   }
 
 }

@@ -21,6 +21,7 @@ import {CommonModule} from '@angular/common';
 import {BrowserModule} from '@angular/platform-browser';
 import {FormsModule} from '@angular/forms';
 import {Http} from '@angular/http';
+import {EffectsModule} from '@ngrx/effects';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {NotificationsService as Angular2NotificationsService} from 'angular2-notifications/src/notifications.service';
 import {TranslateModule, TranslateLoader} from '@ngx-translate/core';
@@ -36,6 +37,11 @@ import {DropdownButtonComponent} from './components/dropdown-button/dropdown-but
 import {DropdownListComponent} from './components/dropdown-list/dropdown-list.component';
 import {FilterDropdownComponent} from './components/filter-dropdown/filter-dropdown.component';
 import {ModalComponent} from './components/modal/modal.component';
+import {NotificationsStoreService} from '@modules/shared/services/notifications-store.service';
+import {ServerResponseNotificationsService} from '@modules/shared/services/server-response-notifications.service';
+
+import {HttpClientEffects} from '@modules/shared/effects/http-client.effects';
+import {LoginGuardService} from '@modules/shared/services/login-guard.service';
 
 @NgModule({
   imports: [
@@ -49,7 +55,8 @@ import {ModalComponent} from './components/modal/modal.component';
         useFactory: AppTranslateService.httpLoaderFactory,
         deps: [Http]
       }
-    })
+    }),
+    EffectsModule.run(HttpClientEffects)
   ],
   declarations: [
     DisableControlDirective,
@@ -59,9 +66,12 @@ import {ModalComponent} from './components/modal/modal.component';
     ModalComponent
   ],
   providers: [
-    NotificationService,
     CanDeactivateGuardService,
-    Angular2NotificationsService
+    Angular2NotificationsService,
+    NotificationService,
+    NotificationsStoreService,
+    ServerResponseNotificationsService,
+    LoginGuardService
   ],
   exports: [
     DisableControlDirective,

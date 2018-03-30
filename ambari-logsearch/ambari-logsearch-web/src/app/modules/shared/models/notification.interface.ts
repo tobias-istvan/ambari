@@ -15,32 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import {Component} from '@angular/core';
-import {AppStateService} from '@app/services/storage/app-state.service';
-import {Observable} from 'rxjs/Observable';
 import {Options} from 'angular2-notifications/src/options.type';
-import {NotificationService} from '@modules/shared/services/notification.service';
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.less']
-})
-export class AppComponent {
-
-  isAuthorized$: Observable<boolean> = this.appState.getParameter('isAuthorized');
-
-  private notificationServiceOptions: Options = {
-    timeOut: 5000,
-    showProgressBar: true,
-    pauseOnHover: true,
-    preventLastDuplicates: 'visible'
-  };
-
-  constructor(
-    private appState: AppStateService,
-    private notificationsService: NotificationService
-  ) {}
-
+export interface NotificationInterface extends Options {
+  id?: string;
+  type: string;
+  message: string;
+  title: string;
+  timestamp?: number;
+  displayed?: boolean;
 }

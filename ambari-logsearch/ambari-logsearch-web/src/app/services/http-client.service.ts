@@ -19,8 +19,9 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/first';
+import 'rxjs/add/observable/throw';
 import {
-  Http, XHRBackend, Request, RequestOptions, RequestOptionsArgs, Response, Headers, URLSearchParams
+  Http, XHRBackend, Request, RequestOptions, RequestOptionsArgs, Response, Headers, URLSearchParams, RequestMethod
 } from '@angular/http';
 import {HomogeneousObject} from '@app/classes/object';
 import {AuditLogsListQueryParams} from '@app/classes/queries/audit-logs-query-params';
@@ -30,13 +31,20 @@ import {ServiceLogsQueryParams} from '@app/classes/queries/service-logs-query-pa
 import {ServiceLogsHistogramQueryParams} from '@app/classes/queries/service-logs-histogram-query-params';
 import {ServiceLogsTruncatedQueryParams} from '@app/classes/queries/service-logs-truncated-query-params';
 import {AppStateService} from '@app/services/storage/app-state.service';
+import {HttpClientResponseEventInterface} from '@modules/shared/models/http-client-response-event.interface';
+import {ResponseSuccess, ResponseError, ResponseAuthError} from '@modules/shared/actions/http-client.actions';
+import {AppStore} from '@app/classes/models/store';
+import {Store} from '@ngrx/store';
+
+export const apiEndPointKeyHeaderKey = 'X-Api-End-Point-Key';
+export const urlVariablesHeaderKey = 'X-Url-Variables';
 
 @Injectable()
 export class HttpClientService extends Http {
 
   private readonly apiPrefix = 'api/v1/';
 
-  private readonly endPoints = {
+  readonly endPoints = Object.freeze({
     status: {
       url: 'status'
     },
@@ -95,11 +103,16 @@ export class HttpClientService extends Http {
     shipperClusterServiceConfigurationTest: {
       url: variables => `shipper/input/${variables.cluster}/test`
     }
-  };
+  });
 
   private readonly unauthorizedStatuses = [401, 403, 419];
 
-  constructor(backend: XHRBackend, defaultOptions: RequestOptions, private appState: AppStateService) {
+  constructor(
+    backend: XHRBackend,
+    defaultOptions: RequestOptions,
+    private appState: AppStateService,
+    private store: Store<AppStore>
+  ) {
     super(backend, defaultOptions);
   }
 
@@ -121,59 +134,89 @@ export class HttpClientService extends Http {
     return generatedUrl;
   }
 
-  private generateUrl(request: string | Request): string | Request {
-    if (typeof request === 'string') {
-      return this.generateUrlString(request);
-    }
+  private generateUrl(request: string | Request, urlVariables?: HomogeneousObject<string>): string | Request {
+    const urlAndParams: string[] = (typeof request === 'string' ? request : request.url).split('?');
+    urlAndParams[0] = this.generateUrlString(urlAndParams[0], urlVariables);
     if (request instanceof Request) {
-      request.url = this.generateUrlString(request.url);
+      request.url = urlAndParams.join('?');
       return request;
+    } else {
+      return urlAndParams.join('?');
     }
   }
 
-  private generateOptions(url: string, params: HomogeneousObject<string>): RequestOptionsArgs {
-    const preset = this.endPoints[url],
-      rawParams = preset && preset.params ? preset.params(params) : params;
+  private generateOptions(
+    url: string,
+    params: HomogeneousObject<string>,
+    urlVariables?: HomogeneousObject<string>
+  ): RequestOptionsArgs {
+    const preset = this.endPoints[url];
+    const rawParams = preset && preset.params ? preset.params(params) : params;
+    const options: RequestOptionsArgs = {};
     if (rawParams) {
-      const paramsString = Object.keys(rawParams).map((key: string): string => `${key}=${rawParams[key]}`).join('&'),
-        urlParams = new URLSearchParams(paramsString, {
+      const paramsString = Object.keys(rawParams).map((key: string): string => `${key}=${rawParams[key]}`).join('&');
+      const urlParams = new URLSearchParams(paramsString, {
           encodeKey: key => key,
           encodeValue: value => encodeURIComponent(value)
         });
-      return {
-        params: urlParams
-      };
+      options.params = urlParams;
     } else {
-      return {
-        params: rawParams
-      };
+      options.params = rawParams;
     }
+    if (!options.headers) {
+      options.headers = new Headers();
+    }
+    if (preset) {
+      options.headers.append(apiEndPointKeyHeaderKey, url);
+    }
+    if (urlVariables) {
+      options.headers.append(urlVariablesHeaderKey, JSON.stringify(urlVariables));
+    }
+    return options;
   }
 
-  private handleError(request: Observable<Response>): void {
-    request.subscribe(null, (error: any) => {
-      if (this.unauthorizedStatuses.indexOf(error.status) > -1) {
-        this.appState.setParameter('isAuthorized', false);
+  private addResponseActionDispatcher = (
+    response$: Observable<Response>,
+    request?: Request | RequestOptionsArgs,
+    method?: RequestMethod
+  ) => {
+    const handler = (response: Response) => {
+      if (response.status < 200 || response.status >= 300) {
+        debugger;
       }
-    });
+      const requestOptions: RequestOptionsArgs = request || {};
+      const responseEventPayload: HttpClientResponseEventInterface = {
+        response,
+        method: method || RequestMethod.Get,
+        apiEndPointKey: requestOptions.headers && requestOptions.headers.get(apiEndPointKeyHeaderKey),
+        request: request
+      };
+      const action: ResponseSuccess | ResponseError | ResponseAuthError = new (
+        this.unauthorizedStatuses.indexOf(response.status) > -1 ? ResponseAuthError :
+          (response.status >= 200 && response.status < 300 ? ResponseSuccess : ResponseError)
+      )(responseEventPayload);
+      this.store.dispatch(action);
+    };
+    response$.subscribe(handler, handler);
   }
 
-  request(url: string | Request, options?: RequestOptionsArgs): Observable<Response> {
-    const req: Observable<Response> = super.request(this.generateUrl(url), options).share().first();
-    this.handleError(req);
-    return req;
+  request(request: string | Request, options?: RequestOptionsArgs): Observable<Response> {
+    const response$ = super.request(this.generateUrl(request), options).share().first();
+    const reqParam = request instanceof Request ? request : undefined;
+    this.addResponseActionDispatcher(response$, options || request, reqParam.method);
+    return response$;
   }
 
   get(url: string, params?: HomogeneousObject<string>, urlVariables?: HomogeneousObject<string>): Observable<Response> {
-    return super.get(this.generateUrlString(url, urlVariables), this.generateOptions(url, params));
+    return super.get(this.generateUrlString(url, urlVariables), this.generateOptions(url, params, urlVariables));
   }
 
   put(url: string, body: any, params?: HomogeneousObject<string>, urlVariables?: HomogeneousObject<string>): Observable<Response> {
-    return super.put(this.generateUrlString(url, urlVariables), body, this.generateOptions(url, params));
+    return super.put(this.generateUrlString(url, urlVariables), body, this.generateOptions(url, params, urlVariables));
   }
 
   post(url: string, body: any, params?: HomogeneousObject<string>, urlVariables?: HomogeneousObject<string>): Observable<Response> {
-    return super.post(this.generateUrlString(url, urlVariables), body, this.generateOptions(url, params));
+    return super.post(this.generateUrlString(url, urlVariables), body, this.generateOptions(url, params, urlVariables));
   }
 
   postFormData(
@@ -181,12 +224,13 @@ export class HttpClientService extends Http {
     params: HomogeneousObject<string>,
     options?: RequestOptionsArgs,
     urlVariables?: HomogeneousObject<string>): Observable<Response> {
-    const encodedParams = this.generateOptions(url, params).params;
+    const generatedOptions = this.generateOptions(url, params, urlVariables);
+    const encodedParams = generatedOptions.params;
     let body;
     if (encodedParams && encodedParams instanceof URLSearchParams) {
       body = encodedParams.rawParams;
     }
-    const requestOptions = Object.assign({}, options);
+    const requestOptions = Object.assign({}, generatedOptions, options);
     if (!requestOptions.headers) {
       requestOptions.headers = new Headers();
     }

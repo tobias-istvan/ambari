@@ -16,24 +16,17 @@
  * limitations under the License.
  */
 
-import { NgModule, APP_INITIALIZER } from '@angular/core';
-import { HttpClientModule } from "@angular/common/http";
+import {Injectable} from '@angular/core';
+import {Store} from '@ngrx/store';
+import {AppStore, CollectionModelService, getCollectionReducer} from '@app/classes/models/store';
 
-import { AppLoadService } from './services/app-load.service';
+export const modelName = 'notifications';
 
-export function check_if_authorized(appLoadService: AppLoadService) {
-  return () => appLoadService.syncAuthorizedStateWithBackend();
+@Injectable()
+export class NotificationsStoreService extends CollectionModelService {
+  constructor(store: Store<AppStore>) {
+    super(modelName, store);
+  }
 }
-export function set_translation_service(appLoadService: AppLoadService) {
-  return () => appLoadService.setTranslateService();
-}
 
-@NgModule({
-  imports: [HttpClientModule],
-  providers: [
-    AppLoadService,
-    { provide: APP_INITIALIZER, useFactory: set_translation_service, deps: [AppLoadService], multi: true },
-    { provide: APP_INITIALIZER, useFactory: check_if_authorized, deps: [AppLoadService], multi: true }
-  ]
-})
-export class AppLoadModule { }
+export const notifications = getCollectionReducer(modelName);

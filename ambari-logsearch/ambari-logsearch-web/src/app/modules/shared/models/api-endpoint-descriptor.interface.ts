@@ -16,23 +16,22 @@
  * limitations under the License.
  */
 
-export interface RequestDescriptor {
+export interface RequestDescriptorInterface {
   title?: string;
   messages?: {
     error?: string;
     success?: string;
-    info?: string;
-    warning?: string;
   };
   description?: string;
 }
 
-export interface ApiEndPointDescriptor {
+export interface ApiEndPointDescriptorInterface {
   title?: string;
   description?: string;
-  get?: RequestDescriptor;
-  post?: RequestDescriptor;
-  put?: RequestDescriptor;
-  patch?: RequestDescriptor;
-  delete?: RequestDescriptor;
+  get?: RequestDescriptorInterface;
+  post?: RequestDescriptorInterface;
+  put?: RequestDescriptorInterface;
+  patch?: RequestDescriptorInterface;
+  delete?: RequestDescriptorInterface;
+  $common?: RequestDescriptorInterface;
 }

@@ -16,24 +16,17 @@
  * limitations under the License.
  */
 
-import { NgModule, APP_INITIALIZER } from '@angular/core';
-import { HttpClientModule } from "@angular/common/http";
+import {initialState} from '@app/classes/models/app-state';
+import {Actions, RESPONSE_AUTH_ERROR} from '@modules/shared/actions/http-client.actions';
 
-import { AppLoadService } from './services/app-load.service';
-
-export function check_if_authorized(appLoadService: AppLoadService) {
-  return () => appLoadService.syncAuthorizedStateWithBackend();
+export function reducer(state = initialState, action: Actions) {
+  switch (action.type) {
+    case RESPONSE_AUTH_ERROR:
+      return {
+        ...state,
+        isAuthorized: false
+      };
+    default:
+      return state;
+  }
 }
-export function set_translation_service(appLoadService: AppLoadService) {
-  return () => appLoadService.setTranslateService();
-}
-
-@NgModule({
-  imports: [HttpClientModule],
-  providers: [
-    AppLoadService,
-    { provide: APP_INITIALIZER, useFactory: set_translation_service, deps: [AppLoadService], multi: true },
-    { provide: APP_INITIALIZER, useFactory: check_if_authorized, deps: [AppLoadService], multi: true }
-  ]
-})
-export class AppLoadModule { }

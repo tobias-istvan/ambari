@@ -242,6 +242,123 @@
   "shipperConfiguration.action.update.error.message": "Error at updating the configuration:<br>Cluster: ${cluster}<br>Service: ${service}",
   "shipperConfiguration.action.validate.title": "Validate Configuration",
   "shipperConfiguration.action.validate.success.message": "The configuration is valid.",
-  "shipperConfiguration.action.validate.error.message": "The configuration is not valid."
+  "shipperConfiguration.action.validate.error.message": "The configuration is not valid.",
+
+  "serverErrorResponseDescriptorByStatusCode": {
+    "$common": {
+      "title": "Server error",
+      "messages": {
+        "$common": "An unexpected error has occurred: <span class='server-message'>{{message}}</span>"
+      }
+    },
+    "400": {
+      "title": "Bad request",
+      "messages": {
+        "$common": "The request was incorrect. See server message: <span class='server-message'>{{message}}</span>"
+      }
+    },
+    "401": {
+      "title": "Authorization error",
+      "messages": {
+        "$common": "You are not authorized to this request."
+      }
+    },
+    "403": {
+      "title": "Authorization error",
+      "messages": {
+        "$common": "This request is forbidden."
+      }
+    },
+    "404": {
+      "title": "Not found",
+      "messages": {
+        "$common": "The requested resource is not found."
+      }
+    },
+    "411": {
+      "title": "URI too long",
+      "messages": {
+        "$common": "This request has too long URI. Please check your filters."
+      }
+    },
+    "419": {
+      "title": "Authorization error",
+      "messages": {
+        "$common": "You are not authorized to this request."
+      }
+    },
+    "500": {
+      "title": "Internal server error",
+      "messages": {
+        "$common": "An unexpected error has occurred: <span class='server-message'>{{message}}</span>"
+      }
+    },
+    "501": {
+      "title": "Not implemented",
+      "messages": {
+        "$common": "This request or feature is not implemented. See server message: <span class='server-message'>{{message}}</span>"
+      }
+    },
+    "503": {
+      "title": "Service Unavailable",
+      "messages": {
+        "$common": "This service is not available now. See server message: <span class='server-message'>{{message}}</span>"
+      }
+    }
+  },
+
+  "apiEndPointResponseDescriptor": {
+    "status": {
+      "title": "Application status"
+    },
+    "auditLogs": {
+      "title": "Audit logs"
+    },
+    "auditLogsGraph": {
+      "title": "Data for audit logs graph"
+    },
+    "auditLogsFields": {
+      "title": "Fields for audit logs"
+    },
+    "serviceLogs": {
+      "title": "Service logs"
+    },
+    "serviceLogsHistogram": {
+      "title": "Service logs histogram data"
+    },
+    "serviceLogsFields": {
+      "title": "Fields for service logs"
+    },
+    "serviceLogsTruncated": {
+      "title": ""
+    },
+    "components": {
+      "title": "Components list"
+    },
+    "serviceComponentsName": {
+      "title": "Name for components"
+    },
+    "clusters": {
+      "title": "Clusters list"
+    },
+    "hosts": {
+      "title": "Hosts list"
+    },
+    "topAuditLogsResources": {
+      "title": ""
+    },
+    "logIndexFilters": {
+      "title": ""
+    },
+    "shipperClusterServiceList": {
+      "title": "Service list of Log Feeder"
+    },
+    "shipperClusterServiceConfiguration": {
+      "title": "Log Feeder configuration"
+    },
+    "shipperClusterServiceConfigurationTest": {
+      "title": "Testing Log Feeder configuration"
+    }
+  }
 
 }

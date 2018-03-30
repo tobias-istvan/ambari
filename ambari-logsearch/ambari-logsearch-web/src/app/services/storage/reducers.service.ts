@@ -17,8 +17,9 @@
  */
 
 import {combineReducers} from '@ngrx/store';
+import * as reduceReducers from 'reduce-reducers';
 import {appSettings} from '@app/services/storage/app-settings.service';
-import {appState} from '@app/services/storage/app-state.service';
+import * as appStateReducer from '@app/services/storage/app-state.service';
 import {auditLogs} from '@app/services/storage/audit-logs.service';
 import {clusters} from '@app/services/storage/clusters.service';
 import {components} from '@app/services/storage/components.service';
@@ -34,7 +35,9 @@ import {userConfigs} from '@app/services/storage/user-configs.service';
 import {tabs} from '@app/services/storage/tabs.service';
 import {clusterSelections} from '@app/services/storage/cluster-selection.service';
 import {logsState} from '@app/services/storage/logs-state.service';
-
+import {notifications} from '@modules/shared/services/notifications-store.service';
+import {reducer as httpClientReducer} from '@modules/shared/reducers/http-client.reducers';
+const appState = reduceReducers(httpClientReducer, appStateReducer.appState);
 export const reducers = {
   appSettings,
   appState,
@@ -52,7 +55,8 @@ export const reducers = {
   auditLogsFields,
   tabs,
   clusterSelections,
-  logsState
+  logsState,
+  notifications
 };
 
 export function reducer(state: any, action: any) {

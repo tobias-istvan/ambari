@@ -18,7 +18,7 @@
 <header>
   <nav class="navbar">
     <h1 [ngClass]="{'full-flex-width': !(isAuthorized$ | async), 'pull-left': true}">{{'common.title' | translate}}</h1>
-    <breadcrumbs></breadcrumbs>
+    <breadcrumbs *ngIf="isAuthorized$ | async"></breadcrumbs>
     <top-menu *ngIf="isAuthorized$ | async"></top-menu>
   </nav>
 </header>

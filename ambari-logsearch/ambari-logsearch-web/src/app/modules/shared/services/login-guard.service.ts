@@ -15,10 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Options} from 'angular2-notifications/src/options.type';
 
-export interface NotificationInterface extends Options {
-  type: string;
-  message: string;
-  title: string;
+import {Injectable} from '@angular/core';
+import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot} from '@angular/router';
+import {Observable} from 'rxjs/Observable';
+
+import {AuthService} from '@app/services/auth.service';
+
+/**
+ * This service meant to be a single place where the authorization should happen.
+ */
+@Injectable()
+export class LoginGuardService implements CanActivate {
+
+  constructor(private authService: AuthService, private router: Router) {}
+
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
+    return this.authService.isAuthorized().map((isAuthorized: boolean) => {
+      if (isAuthorized) {
+        this.router.navigate(['/']);
+      }
+      return !isAuthorized;
+    });
+  }
+
 }

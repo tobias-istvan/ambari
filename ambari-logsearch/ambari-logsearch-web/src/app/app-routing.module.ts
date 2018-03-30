@@ -21,6 +21,7 @@ import {RouterModule, Routes} from '@angular/router';
 import {LogsContainerComponent} from '@app/components/logs-container/logs-container.component';
 import {LoginFormComponent} from '@app/components/login-form/login-form.component';
 import {AuthGuardService} from '@app/services/auth-guard.service';
+import {LoginGuardService} from '@modules/shared/services/login-guard.service';
 import {TabGuard} from '@app/services/tab.guard';
 import {LogsBreadcrumbsResolverService} from '@app/services/logs-breadcrumbs-resolver.service';
 
@@ -29,7 +30,8 @@ const appRoutes: Routes = [{
     component: LoginFormComponent,
     data: {
       breadcrumbs: 'login.title'
-    }
+    },
+    canActivate: [LoginGuardService]
   }, {
     path: 'logs/:activeTab',
     component: LogsContainerComponent,
