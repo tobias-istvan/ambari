@@ -38,7 +38,7 @@ export class ComponentGeneratorService {
   private createComponent(type: any, container: ViewContainerRef, properties?: any): void {
     const factory = this.resolver.resolveComponentFactory(type);
     container.clear();
-    let component = container.createComponent(factory);
+    const component = container.createComponent(factory);
     Object.assign(component.instance, properties);
   }
 

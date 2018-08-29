@@ -47,6 +47,7 @@ import {RoutingUtilsService} from '@app/services/routing-utils.service';
 import {LogsFilteringUtilsService} from '@app/services/logs-filtering-utils.service';
 import {NotificationService} from '@modules/shared/services/notification.service';
 import {NotificationsService} from 'angular2-notifications/src/notifications.service';
+import {LogsContainerUiSettingsService} from '@app/services/logs-conatiner-ui-settings.service';
 
 describe('FiltersPanelComponent', () => {
   let component: FiltersPanelComponent;
@@ -106,7 +107,8 @@ describe('FiltersPanelComponent', () => {
         LogsFilteringUtilsService,
         LogsStateService,
         NotificationsService,
-        NotificationService
+        NotificationService,
+        LogsContainerUiSettingsService
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })

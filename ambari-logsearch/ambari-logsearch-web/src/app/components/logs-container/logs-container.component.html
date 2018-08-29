@@ -44,7 +44,7 @@
   </div>
   <ng-container [ngSwitch]="logsType">
     <ng-container *ngSwitchCase="'serviceLogs'">
-      <collapsible-panel [class.hide]="isServiceLogsFileView$ | async" openTitle="logs.hideGraph" collapsedTitle="logs.showGraph">
+      <collapsible-panel *ngIf="uiSettingsService.showCharts$ | async" [class.hide]="isServiceLogsFileView$ | async" openTitle="logs.hideGraph" collapsedTitle="logs.showGraph">
         <time-histogram (selectArea)="setCustomTimeRange($event[0], $event[1])" [data]="serviceLogsHistogramData"
                         [colors]="serviceLogsHistogramColors" [allowFractionalYTicks]="false"
                         svgId="service-logs-histogram"></time-histogram>
@@ -53,7 +53,7 @@
                           [filtersForm]="filtersForm"></service-logs-table>
     </ng-container>
     <ng-container *ngSwitchCase="'auditLogs'">
-      <collapsible-panel commonTitle="logs.duration">
+      <collapsible-panel *ngIf="uiSettingsService.showCharts$ | async" commonTitle="logs.duration">
         <time-line-graph (selectArea)="setCustomTimeRange($event[0], $event[1])" [data]="auditLogsGraphData"
                          [allowFractionalYTicks]="false" [skipZeroValuesInTooltip]="false"
                          svgId="audit-logs-graph"></time-line-graph>

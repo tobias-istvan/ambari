@@ -30,6 +30,7 @@ import {LogsContainerService} from '@app/services/logs-container.service';
 import {UtilsService} from '@app/services/utils.service';
 import {AppStateService} from '@app/services/storage/app-state.service';
 import {Subscription} from 'rxjs/Subscription';
+import {LogsContainerUiSettingsService} from '@app/services/logs-conatiner-ui-settings.service';
 
 @Component({
   selector: 'filters-panel',
@@ -57,6 +58,15 @@ export class FiltersPanelComponent implements OnDestroy, OnInit {
     return this.logsContainerService.filters;
   }
 
+  hosts$: Observable<ListItem[]> = this.logsContainerUiSettings.shortDomainNames$.map((shortNames: boolean): ListItem[] => {
+    return this.logsContainerService.filters.hosts.options.map((hostItem: ListItem): ListItem => {
+      return {
+        ...hostItem,
+        label: shortNames ? hostItem.label.split('.')[0] : hostItem.label
+      };
+    });
+  });
+
   /**
    * Object with options for search box parameter values
    * @returns HomogeneousObject<ListItem[]>
@@ -81,8 +91,13 @@ export class FiltersPanelComponent implements OnDestroy, OnInit {
     return this.logsContainerService.queryParameterAdd;
   }
 
-  constructor(private logsContainerService: LogsContainerService, public viewContainerRef: ViewContainerRef,
-              private utils: UtilsService, private appState: AppStateService) {
+  constructor(
+    private logsContainerService: LogsContainerService,
+    public viewContainerRef: ViewContainerRef,
+    private utils: UtilsService,
+    private appState: AppStateService,
+    private logsContainerUiSettings: LogsContainerUiSettingsService
+  ) {
   }
 
   ngOnInit() {

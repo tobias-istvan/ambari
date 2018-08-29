@@ -38,7 +38,7 @@ import {Subscription} from 'rxjs/Subscription';
 import {LogsFilteringUtilsService} from '@app/services/logs-filtering-utils.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
-import {LogsStateService} from '@app/services/storage/logs-state.service';
+import { LogsContainerUiSettingsService } from '@app/services/logs-conatiner-ui-settings.service';
 
 @Component({
   selector: 'logs-container',
@@ -58,7 +58,7 @@ export class LogsContainerComponent implements OnInit, OnDestroy {
     });
   });
 
-  private logsType: LogsType;
+  logsType: LogsType;
 
   serviceLogsHistogramData: HomogeneousObject<HomogeneousObject<number>>;
 
@@ -87,7 +87,7 @@ export class LogsContainerComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private paramsSyncInProgress: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-  private isServiceLogsFileView$: Observable<boolean> = this.appState.getParameter('isServiceLogsFileView');
+  isServiceLogsFileView$: Observable<boolean> = this.appState.getParameter('isServiceLogsFileView');
 
   constructor(
     private appState: AppStateService,
@@ -98,7 +98,7 @@ export class LogsContainerComponent implements OnInit, OnDestroy {
     private auditLogsGraphStorage: AuditLogsGraphDataService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private logsStateService: LogsStateService
+    public uiSettingsService: LogsContainerUiSettingsService
   ) {}
 
   ngOnInit() {

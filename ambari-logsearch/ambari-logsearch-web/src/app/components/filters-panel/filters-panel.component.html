@@ -34,7 +34,7 @@
                      [options]="searchBoxItems$ | async" (selectItem)="proceedWithExclude($event)"></dropdown-button>
     <filter-button *ngIf="isFilterConditionDisplayed('hosts')" formControlName="hosts"
                    label="{{filters.hosts.label | translate}}" [iconClass]="filters.hosts.iconClass"
-                   [subItems]="filters.hosts.options" [isMultipleChoice]="true" [isRightAlign]="true"
+                   [subItems]="hosts$ | async" [isMultipleChoice]="true" [isRightAlign]="true"
                    additionalLabelComponentSetter="getDataForHostsNodeBar"
                    [class.disabled]="isServiceLogsFileView$ | async" [isDisabled]="isServiceLogsFileView$ | async"
                    [useDropDownLocalFilter]="true"></filter-button>
